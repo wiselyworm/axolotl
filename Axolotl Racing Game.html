@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axolotl Race!</title>
+    <style>
+        :root {
+            /* Track Colors */
+            --track-dark-gray: #37474f;
+            --track-light-gray: #607d8b;
+            --sky-blue: #87ceeb;
+            --sky-light-blue: #add8e6;
+            --line-white: #eceff1;
+            --sun-yellow: #ffeb3b;
+            --cloud-white: #ffffff;
+            --forest-green: #388e3c;
+            --forest-dark-green: #1b5e20;
+            --banner-bg: #ffab40;
+            --banner-text: #4e342e;
+            /* Axolotl Colors */
+            --player-pink: #ff80ab;
+            --player-dark-pink: #c51162;
+            --option-blue: #80d8ff;
+            --option-dark-blue: #0091ea;
+            --gill-color: #f48fb1;
+            --option-gill-color: #bae6fd;
+            --eye-color: #212121;
+        }
+
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to bottom,
+                          var(--sky-blue) 0%, var(--sky-light-blue) 45%,
+                          var(--track-light-gray) 50%, var(--track-dark-gray) 100%
+                       );
+            position: relative;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        /* --- Background Elements (Unchanged) --- */
+        #sky-elements { position: absolute; top: 0; left: 0; width: 100%; height: 50%; z-index: 0; overflow: hidden; }
+        #sun { position: absolute; top: 10%; left: 15%; width: 80px; height: 80px; background-color: var(--sun-yellow); border-radius: 50%; box-shadow: 0 0 20px 5px rgba(255, 235, 59, 0.7); animation: pulse 5s infinite ease-in-out; }
+        .cloud { position: absolute; background-color: var(--cloud-white); border-radius: 50px; opacity: 0.85; animation: moveCloud linear infinite; }
+        .cloud.c1 { top: 15%; width: 120px; height: 40px; left: -150px; animation-duration: 40s; animation-delay: -5s; } .cloud.c2 { top: 25%; width: 80px; height: 30px; left: -100px; animation-duration: 30s; animation-delay: 0s; } .cloud.c3 { top: 10%; width: 150px; height: 50px; left: -200px; animation-duration: 50s; animation-delay: -15s; } .cloud.c4 { top: 35%; width: 100px; height: 35px; left: -120px; animation-duration: 35s; animation-delay: -8s; }
+        .bird { position: absolute; font-size: 1.5em; color: #333; animation: moveBird linear infinite; transform-origin: center; }
+        .bird.b1 { top: 20%; left: -50px; animation-duration: 25s; animation-delay: -2s; } .bird.b2 { top: 12%; left: -80px; animation-duration: 32s; animation-delay: -10s; } .bird.b3 { top: 28%; left: -60px; animation-duration: 28s; animation-delay: -18s; }
+        #forestry { position: absolute; bottom: 50%; left: 0; width: 100%; height: 50px; z-index: 1; transform: translateY(5px); }
+        .tree-group { position: absolute; bottom: 0; height: 100%; background: linear-gradient(to top, var(--forest-dark-green), var(--forest-green)); border-top-left-radius: 60% 30px; border-top-right-radius: 60% 30px; box-shadow: inset 0 4px 8px rgba(0,0,0,0.3); animation: sway 8s infinite ease-in-out alternate; }
+        .tree-group.tg1 { left: 2%; width: 12%; height: 90%; animation-delay: -1s; } .tree-group.tg2 { left: 15%; width: 18%; height: 110%; animation-delay: -3s; } .tree-group.tg3 { left: 35%; width: 15%; height: 85%; animation-delay: 0s; } .tree-group.tg4 { left: 52%; width: 20%; height: 100%; animation-delay: -2.5s; } .tree-group.tg5 { left: 75%; width: 10%; height: 95%; animation-delay: -5s; } .tree-group.tg6 { left: 88%; width: 14%; height: 80%; animation-delay: -1.5s; }
+
+        /* --- Track Elements (Unchanged) --- */
+        #track-base { position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; z-index: 2; perspective: 350px; }
+        #center-line { position: absolute; bottom: 0; left: 50%; width: 15px; height: 100%; background-image: linear-gradient(var(--line-white) 60%, transparent 60%); background-size: 8px 40px; background-repeat: repeat-y; transform-origin: bottom center; transform: translateX(-50%) rotateX(65deg); animation: moveLines 0.6s linear infinite; z-index: 3; }
+        body::before, body::after { content: ''; position: absolute; bottom: 0; width: 35px; height: 50%; background-color: var(--line-white); opacity: 0.95; transform-origin: bottom center; transform: perspective(350px) rotateX(65deg); z-index: 3; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        body::before { left: 28%; transform: perspective(350px) rotateX(65deg) translateX(-100%); }
+        body::after { right: 28%; transform: perspective(350px) rotateX(65deg) translateX(100%); }
+
+        /* --- Game Container & Elements (Unchanged Layout) --- */
+        #game-container { background-color: transparent; text-align: center; width: 100%; max-width: 100%; position: relative; z-index: 10; display: flex; flex-direction: column; min-height: 100vh; justify-content: flex-end; padding: 10px; box-sizing: border-box; }
+        h1, #options-section p, #feedback, #progress, #win-message h2, #win-message p, #start-screen p { text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9); }
+        h1 { color: #fffde7; margin-top: 0; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); }
+        #game-area { display: flex; flex-direction: column; align-items: center; width: 100%; position: relative; margin-bottom: 10px; }
+        #checkpoint { order: 1; width: 60%; max-width: 380px; margin: 4vh auto 20px auto; padding: 8px 15px; background-color: var(--banner-bg); color: var(--banner-text); border: 3px solid #a1887f; border-radius: 8px; font-size: 1.3em; font-weight: bold; text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3); box-shadow: 0 4px 8px rgba(0,0,0,0.3); position: relative; z-index: 11; }
+        #checkpoint-number { display: inline-block; padding: 2px 8px; margin-left: 5px; background-color: var(--line-white); border-radius: 5px; color: var(--banner-text); text-shadow: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); }
+        #options-section { order: 2; width: 70%; margin-left: auto; margin-right: auto; margin-bottom: 25px; }
+        #options-section p { font-size: 1.1em; font-weight: bold; margin-bottom: 15px; }
+        #options-container { display: flex; justify-content: space-around; flex-wrap: wrap; width: 100%; gap: 15px; }
+        #player-section { order: 3; padding-bottom: 5vh; position: relative; }
+
+        /* --- Axolotl Design (Base structure) --- */
+        .axolotl {
+            width: 70px; height: 55px;
+            border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+            margin: 10px auto; position: relative; display: flex; align-items: center; justify-content: center;
+            transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4); z-index: 10;
+            background-color: transparent; border: none;
+        }
+        .axolotl::before { /* Body */ content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: 1; box-sizing: border-box; }
+        .axolotl::after { /* Eyes */ content: ''; position: absolute; width: 8px; height: 12px; background-color: var(--eye-color); border-radius: 50%; top: 35%; left: 25%; box-shadow: 8px 0 0 var(--eye-color), 1px -2px 0 2px white, 9px -2px 0 2px white; transform: translateX(10%); z-index: 3; }
+        .gills { position: absolute; top: 30%; width: 100%; height: 50%; z-index: 0; }
+        .gill { position: absolute; width: 8px; height: 22px; background-color: var(--gill-color); border-radius: 5px; transform-origin: bottom; }
+        .gill.l1 { left: -6px; top: 0; transform: rotate(-30deg); } .gill.l2 { left: -2px; top: 6px; transform: rotate(-10deg) scaleY(0.9); } .gill.l3 { left: 0px; top: 12px; transform: rotate(10deg) scaleY(0.8); }
+        .gill.r1 { right: -6px; top: 0; transform: rotate(30deg); } .gill.r2 { right: -2px; top: 6px; transform: rotate(10deg) scaleY(0.9); } .gill.r3 { right: 0px; top: 12px; transform: rotate(-10deg) scaleY(0.8); }
+        .legs { position: absolute; bottom: -2px; width: 90%; left: 5%; height: 15px; z-index: 0; }
+        .leg { position: absolute; width: 12px; height: 15px; border-radius: 4px 4px 6px 6px; box-sizing: border-box; }
+        .leg.fl { bottom: 0; left: 10%; } .leg.fr { bottom: 0; right: 10%; }
+        .leg.bl { bottom: -4px; left: 25%; width: 10px; height: 12px; opacity: 0.8; } .leg.br { bottom: -4px; right: 25%; width: 10px; height: 12px; opacity: 0.8; }
+
+        /* Player Styles */
+        #player-axolotl::before { background-color: var(--player-pink); border: 3px solid var(--player-dark-pink); }
+        #player-axolotl .leg { background-color: var(--player-pink); border: 1px solid var(--player-dark-pink); }
+        #player-axolotl .gill { background-color: var(--gill-color); }
+        #player-axolotl { animation: runBob 0.5s infinite ease-in-out; }
+
+        /* Option Styles */
+        .option-axolotl::before { background-color: var(--option-blue); border: 3px solid var(--option-dark-blue); }
+        .option-axolotl .leg { background-color: var(--option-blue); border: 1px solid var(--option-dark-blue); }
+        .option-axolotl .gill { background-color: var(--option-gill-color); }
+        .option-axolotl { cursor: pointer; animation: idleBob 2s infinite ease-in-out; }
+        .option-axolotl:hover { transform: scale(1.1); box-shadow: 0 0 10px rgba(0, 145, 234, 0.5); animation-play-state: paused; }
+
+        /* Start/Win Screen Axolotl Styles */
+        .axolotl.player-colors::before { background-color: var(--player-pink); border: 3px solid var(--player-dark-pink); }
+        .axolotl.player-colors .leg { background-color: var(--player-pink); border: 1px solid var(--player-dark-pink); }
+        .axolotl.player-colors .gill { background-color: var(--gill-color); }
+        #start-screen .axolotl, #win-message .axolotl { animation: none !important; }
+
+        /* --- Axolotl Number Repositioned --- */
+        .axolotl-number {
+            position: absolute;
+            top: 50%;                 /* Vertically align to middle */
+            right: 100%;              /* Position right edge at the left edge of parent */
+            transform: translateY(-50%);/* Adjust vertical alignment */
+            margin-right: 8px;        /* Add space between number and axolotl */
+            background-color: rgba(50, 50, 50, 0.9);
+            color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 1em;
+            white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.3); z-index: 11;
+        }
+
+        /* Feedback & Screens (Unchanged) */
+        #feedback { order: 4; margin-top: 5px; font-weight: bold; min-height: 1.2em; font-size: 1.1em; }
+        .correct { color: #a5d6a7; } .incorrect { color: #ef9a9a; }
+        #win-message, #start-screen { display: none; margin-top: 0; font-size: 1.8em; color: #fff; flex-direction: column; align-items: center; width: 90%; max-width: 500px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 20; background-color: rgba(0, 0, 0, 0.7); padding: 30px; border-radius: 15px; box-sizing: border-box; }
+        #start-screen:not(.active), #win-message:not(.active) { display: none; }
+        #start-screen.active, #win-message.active { display: flex; }
+        #start-screen h2, #win-message h2 { margin-top: 0; margin-bottom: 15px; }
+        #start-screen .axolotl, #win-message .axolotl { margin-top: 10px; margin-bottom: 20px; }
+        button { padding: 12px 25px; font-size: 1.2em; cursor: pointer; border: none; border-radius: 8px; background-color: #ffca28; color: #333; margin-top: 10px; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.3); text-shadow: none; }
+        button:hover { background-color: #ffb300; } button:active { transform: scale(0.98); }
+        #progress { font-size: 1.1em; color: #fff; position: absolute; top: 15px; right: 20px; background-color: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px; z-index: 15; }
+
+        /* --- Animations (Unchanged) --- */
+         @keyframes pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 20px 5px rgba(255, 235, 59, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 30px 10px rgba(255, 235, 59, 0.9); } }
+         @keyframes moveCloud { from { transform: translateX(0); } to { transform: translateX(calc(100vw + 200px)); } }
+         @keyframes moveBird { 0% { transform: translateX(0) translateY(0) rotate(0deg); } 25% { transform: translateX(calc(25vw + 50px)) translateY(-10px) rotate(-5deg); } 50% { transform: translateX(calc(50vw + 100px)) translateY(0) rotate(0deg); } 75% { transform: translateX(calc(75vw + 150px)) translateY(-10px) rotate(5deg); } 100% { transform: translateX(calc(100vw + 200px)) translateY(0) rotate(0deg); } }
+         @keyframes sway { from { transform: rotate(-1deg); } to { transform: rotate(1deg); } }
+         @keyframes moveLines { from { background-position: 0 0; } to { background-position: 0 -40px; } }
+         @keyframes runBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+         @keyframes idleBob { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.02); } }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background Elements -->
+    <div id="sky-elements"> <div id="sun"></div> <div class="cloud c1"></div> <div class="cloud c2"></div> <div class="cloud c3"></div> <div class="cloud c4"></div> <div class="bird b1">~</div> <div class="bird b2">^</div> <div class="bird b3">~</div> </div>
+    <div id="forestry"> <div class="tree-group tg1"></div> <div class="tree-group tg2"></div> <div class="tree-group tg3"></div> <div class="tree-group tg4"></div> <div class="tree-group tg5"></div> <div class="tree-group tg6"></div> </div>
+    <div id="track-base"> <div id="center-line"></div> </div>
+
+    <!-- Game Content -->
+    <div id="game-container">
+         <h1>Axolotl Race!</h1>
+
+        <div id="start-screen" class="active"> <!-- Initial state -->
+            <h2>Ready?</h2>
+            <p>Help Pinky reach the finish line!</p>
+            <!-- Added player-colors class -->
+            <div id="start-player-axolotl" class="axolotl player-colors" style="width: 80px; height: 63px;">
+                 <div class="gills"> <div class="gill l1"></div><div class="gill l2"></div><div class="gill l3"></div> <div class="gill r1"></div><div class="gill r2"></div><div class="gill r3"></div> </div>
+                 <div class="legs"> <div class="leg fl"></div><div class="leg fr"></div><div class="leg bl"></div><div class="leg br"></div> </div>
+             </div>
+            <button id="start-button">Start Race</button>
+        </div>
+
+        <div id="game-area" style="display: none;"> <!-- Initially hidden -->
+             <div id="progress">Checkpoint: 1 / 10</div>
+            <div id="checkpoint"> 🏁 Target: <span id="checkpoint-number">?</span> </div>
+            <div id="options-section">
+                 <p>Choose the friend whose number adds up to the target!</p>
+                 <div id="options-container">
+                    <div class="option-axolotl axolotl" data-value="">
+                         <div class="axolotl-number option-number">?</div>
+                         <div class="gills"> <div class="gill l1"></div><div class="gill l2"></div><div class="gill l3"></div> <div class="gill r1"></div><div class="gill r2"></div><div class="gill r3"></div> </div>
+                         <div class="legs"> <div class="leg fl"></div><div class="leg fr"></div><div class="leg bl"></div><div class="leg br"></div> </div>
+                     </div>
+                    <div class="option-axolotl axolotl" data-value="">
+                        <div class="axolotl-number option-number">?</div>
+                        <div class="gills"> <div class="gill l1"></div><div class="gill l2"></div><div class="gill l3"></div> <div class="gill r1"></div><div class="gill r2"></div><div class="gill r3"></div> </div>
+                        <div class="legs"> <div class="leg fl"></div><div class="leg fr"></div><div class="leg bl"></div><div class="leg br"></div> </div>
+                    </div>
+                    <div class="option-axolotl axolotl" data-value="">
+                         <div class="axolotl-number option-number">?</div>
+                         <div class="gills"> <div class="gill l1"></div><div class="gill l2"></div><div class="gill l3"></div> <div class="gill r1"></div><div class="gill r2"></div><div class="gill r3"></div> </div>
+                         <div class="legs"> <div class="leg fl"></div><div class="leg fr"></div><div class="leg bl"></div><div class="leg br"></div> </div>
+                     </div>
+                 </div>
+            </div>
+            <div id="player-section">
+                <div id="player-axolotl" class="axolotl"> <!-- Player styles applied via ID -->
+                    <div id="player-number" class="axolotl-number">?</div>
+                    <div class="gills"> <div class="gill l1"></div><div class="gill l2"></div><div class="gill l3"></div> <div class="gill r1"></div><div class="gill r2"></div><div class="gill r3"></div> </div>
+                    <div class="legs"> <div class="leg fl"></div><div class="leg fr"></div><div class="leg bl"></div><div class="leg br"></div> </div>
+                </div>
+            </div>
+             <div id="feedback"></div>
+        </div>
+
+        <div id="win-message"> <!-- Initially hidden via class absence -->
+            <h2>You Won! 🎉</h2>
+            <p>Pinky grew big and strong!</p>
+            <!-- Added player-colors class -->
+             <div id="win-player-axolotl" class="axolotl player-colors" style="width: 150px; height: 118px;">
+                 <div class="gills"> <div class="gill l1"></div><div class="gill l2"></div><div class="gill l3"></div> <div class="gill r1"></div><div class="gill r2"></div><div class="gill r3"></div> </div>
+                 <div class="legs"> <div class="leg fl"></div><div class="leg fr"></div><div class="leg bl"></div><div class="leg br"></div> </div>
+             </div>
+            <button id="restart-button">Play Again?</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Elements, State, Logic (All Unchanged) ---
+        const startScreen = document.getElementById('start-screen');
+        const gameArea = document.getElementById('game-area');
+        const winMessage = document.getElementById('win-message');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const playerAxolotlElement = document.getElementById('player-axolotl');
+        const playerNumberElement = document.getElementById('player-number');
+        const checkpointNumberElement = document.getElementById('checkpoint-number');
+        const optionsContainer = document.getElementById('options-container');
+        const optionElements = optionsContainer.querySelectorAll('.option-axolotl');
+        const optionNumberElements = optionsContainer.querySelectorAll('.option-number');
+        const feedbackElement = document.getElementById('feedback');
+        const progressElement = document.getElementById('progress');
+        const winPlayerAxolotlElement = document.getElementById('win-player-axolotl');
+
+        let playerNum = 0; let targetNum = 0; let correctSummand = 0;
+        let currentCheckpoint = 0; const totalCheckpoints = 10;
+        let playerBaseSizeW = 70; let playerBaseSizeH = 55;
+        let playerCurrentW = playerBaseSizeW; let playerCurrentH = playerBaseSizeH;
+        const sizeIncrementW = 7; const sizeIncrementH = 5.5;
+
+        function getRandomInt(min, max) { min = Math.ceil(min); max = Math.floor(max); return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } }
+        function generateCheckpoint() {
+            currentCheckpoint++;
+            if (currentCheckpoint > totalCheckpoints) { winGame(); return; }
+            progressElement.textContent = `Checkpoint: ${currentCheckpoint} / ${totalCheckpoints}`;
+            feedbackElement.textContent = ''; feedbackElement.className = '';
+            playerNum = getRandomInt(5, 30); playerNumberElement.textContent = playerNum;
+            correctSummand = getRandomInt(5, 25); targetNum = playerNum + correctSummand;
+            checkpointNumberElement.textContent = targetNum;
+            let incorrectSummand1 = correctSummand; while (incorrectSummand1 === correctSummand) { incorrectSummand1 = getRandomInt(Math.max(1, correctSummand - 10), correctSummand + 10); }
+            let incorrectSummand2 = correctSummand; while (incorrectSummand2 === correctSummand || incorrectSummand2 === incorrectSummand1) { incorrectSummand2 = getRandomInt(Math.max(1, correctSummand - 10), correctSummand + 10); }
+            const options = [correctSummand, incorrectSummand1, incorrectSummand2]; shuffleArray(options);
+            optionElements.forEach((optionElement, index) => {
+                const value = options[index]; optionElement.dataset.value = value;
+                optionNumberElements[index].textContent = value;
+                optionElement.style.pointerEvents = 'auto'; optionElement.style.opacity = '1';
+                optionElement.style.animationPlayState = 'running';
+            });
+        }
+        function checkAnswer(event) {
+            const clickedElement = event.target.closest('.option-axolotl'); if (!clickedElement) return;
+            const chosenValue = parseInt(clickedElement.dataset.value, 10);
+            optionElements.forEach(el => { el.style.pointerEvents = 'none'; el.style.opacity = '0.6'; el.style.animationPlayState = 'paused'; });
+            if (playerNum + chosenValue === targetNum) {
+                feedbackElement.textContent = `Correct! ${playerNum} + ${chosenValue} = ${targetNum}`; feedbackElement.className = 'correct';
+                playerCurrentW += sizeIncrementW; playerCurrentH += sizeIncrementH;
+                playerAxolotlElement.style.width = `${playerCurrentW}px`;
+                playerAxolotlElement.style.height = `${playerCurrentH}px`;
+                setTimeout(generateCheckpoint, 1200);
+            } else {
+                feedbackElement.textContent = `Oops! ${playerNum} + ${chosenValue} ≠ ${targetNum}. Try the next one!`; feedbackElement.className = 'incorrect';
+                setTimeout(generateCheckpoint, 1500);
+            }
+        }
+        function showScreen(screenToShow) {
+             startScreen.classList.remove('active'); winMessage.classList.remove('active');
+             gameArea.style.display = 'none'; // Hide game area by default
+             if (screenToShow === 'start') { startScreen.classList.add('active'); }
+             else if (screenToShow === 'game') { gameArea.style.display = 'flex'; } // Show game area
+             else if (screenToShow === 'win') { winMessage.classList.add('active'); }
+         }
+        function winGame() {
+             showScreen('win');
+             winPlayerAxolotlElement.style.width = `${playerCurrentW}px`;
+             winPlayerAxolotlElement.style.height = `${playerCurrentH}px`;
+        }
+        function startGame() {
+            currentCheckpoint = 0;
+            playerCurrentW = playerBaseSizeW; playerCurrentH = playerBaseSizeH;
+            playerAxolotlElement.style.width = `${playerCurrentW}px`;
+            playerAxolotlElement.style.height = `${playerCurrentH}px`;
+            showScreen('game');
+            generateCheckpoint();
+        }
+
+        // --- Event Listeners & Initial Setup (Unchanged) ---
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+        optionsContainer.addEventListener('click', checkAnswer);
+        showScreen('start'); // Set initial screen
+
+    </script>
+
+</body>
+</html>

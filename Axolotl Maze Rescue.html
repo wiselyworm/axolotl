@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axolotl Maze Rescue</title>
+    <style>
+        /* --- Base Colors --- */
+        :root {
+            --player-pink-body: #FFB6C1; /* LightPink */
+            --player-pink-accents: #FF69B4; /* HotPink */
+            --friend-blue-body: #ADD8E6; /* LightBlue */
+            --friend-blue-accents: #87CEEB; /* SkyBlue */
+            --eye-white: #FFFFFF;
+            --eye-pupil: #000000;
+            --wall-color: #8B4513; /* SaddleBrown */
+            --floor-color: #90EE90; /* LightGreen */
+        }
+
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #game-board {
+            display: grid;
+            border: 2px solid black;
+            margin-top: 10px;
+            background-color: #e0e0e0;
+            position: relative; /* For game over message */
+            overflow: hidden; /* Hide parts of axolotls sticking out */
+        }
+        .tile {
+            width: 30px; /* Tile size */
+            height: 30px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .wall {
+            background-color: var(--wall-color);
+        }
+        .floor {
+            background-color: var(--floor-color);
+        }
+
+        /* --- Axolotl Structure & Styling --- */
+        .axolotl {
+            position: relative; /* Container for absolute parts */
+            width: 75%;
+            height: 75%;
+            border-radius: 40% 40% 50% 50% / 60% 60% 40% 40%; /* Cute rounded body shape */
+            animation: axolotl-bob 1.5s ease-in-out infinite;
+            /* Apply body color directly here based on player/friend class */
+        }
+
+        /* Apply colors directly to the main axolotl divs */
+        .player-axolotl { background-color: var(--player-pink-body); }
+        .friend-axolotl { background-color: var(--friend-blue-body); }
+
+        /* Remove these as they are no longer needed */
+        /* .player-axolotl .body { background-color: var(--player-pink-body); } */
+        /* .friend-axolotl .body { background-color: var(--friend-blue-body); } */
+
+        /* Accent colors still target parts inside the correct parent */
+        .player-axolotl .gill, .player-axolotl .tail { background-color: var(--player-pink-accents); }
+        .friend-axolotl .gill, .friend-axolotl .tail { background-color: var(--friend-blue-accents); }
+
+        .eye {
+            position: absolute;
+            width: 35%;
+            height: 35%;
+            background-color: var(--eye-white);
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            top: 20%;
+            animation: axolotl-blink 4s infinite;
+        }
+        .eye.left { left: 15%; }
+        .eye.right { right: 15%; }
+
+        .pupil {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            background-color: var(--eye-pupil);
+            border-radius: 50%;
+            top: 25%;
+            left: 25%;
+            animation: pupil-look 6s ease-in-out infinite;
+        }
+
+        /* Gills */
+        .gill {
+            position: absolute;
+            width: 12%;
+            height: 25%;
+            border-radius: 50% 50% 20% 20% / 80% 80% 20% 20%;
+            transform-origin: bottom center;
+            animation: gill-wiggle 1.8s ease-in-out infinite alternate;
+        }
+        .gill.g1 { top: 15%; height: 22%; }
+        .gill.g2 { top: 35%; }
+        .gill.g3 { top: 55%; height: 22%; }
+
+        .gill.left.g1 { left: -8%; transform: rotate(-25deg); animation-delay: 0.1s; }
+        .gill.left.g2 { left: -10%; transform: rotate(-15deg); }
+        .gill.left.g3 { left: -8%; transform: rotate(-5deg); animation-delay: 0.2s; }
+
+        .gill.right.g1 { right: -8%; transform: rotate(25deg); animation-delay: 0.15s; }
+        .gill.right.g2 { right: -10%; transform: rotate(15deg); animation-delay: 0.05s; }
+        .gill.right.g3 { right: -8%; transform: rotate(5deg); animation-delay: 0.25s; }
+
+        .tail {
+            position: absolute;
+            width: 25%;
+            height: 45%;
+            bottom: -15%;
+            left: 50%;
+            transform: translateX(-50%) rotate(0deg);
+            border-radius: 50% 50% 50% 50% / 80% 80% 20% 20%;
+            transform-origin: top center;
+            animation: tail-swish 2s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        /* Other styles (animations, UI, etc.) remain the same */
+
+        /* --- Axolotl Animations --- */
+        @keyframes axolotl-bob { /* Gentle floating/bobbing */
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        @keyframes axolotl-blink { /* Quick blink */
+             0%, 95%, 100% { transform: scaleY(1); }
+             97%, 99% { transform: scaleY(0.1); } /* Squish eye vertically */
+        }
+
+        @keyframes pupil-look { /* Subtle darting eyes */
+            0%, 100% { transform: translate(0, 0); }
+            20%, 30% { transform: translate(1px, -1px); }
+            50%, 60% { transform: translate(-1px, 1px); }
+            80%, 90% { transform: translate(0px, 1px); }
+        }
+
+
+        @keyframes gill-wiggle { /* Gentle wiggle */
+            from { transform: rotate(-5deg) scale(0.95); }
+            to { transform: rotate(5deg) scale(1); }
+        }
+        /* Apply base rotation via inline style or specific classes if needed */
+
+
+        @keyframes tail-swish { /* Gentle side-to-side */
+            from { transform: translateX(-50%) rotate(-15deg); }
+            to { transform: translateX(-50%) rotate(15deg); }
+        }
+
+
+        /* --- Exit Styling --- */
+        .exit-container { width: 70%; height: 70%; display: flex; align-items: center; justify-content: center;}
+        .exit-icon { width: 100%; height: 100%; border-radius: 5px;}
+        .exit-closed .exit-icon { background-color: #ff6347; border: 1px solid #cc4f38; }
+        .exit-open .exit-icon { background-color: #32cd32; border: 1px solid #28a428; }
+
+        /* --- UI Stuff (mostly unchanged) --- */
+         #status { margin-top: 10px; font-size: 1.1em; font-weight: bold; text-align: center; }
+        #instructions { margin-top: 5px; color: #555; font-size: 0.9em; text-align: center; }
+        #game-over-message { /* Unchanged */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); color: white; font-size: 2em;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; visibility: hidden; z-index: 10;
+        }
+        #game-over-message button { /* Unchanged */
+            margin-top: 15px; padding: 10px 20px; font-size: 0.8em; cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <h1>Axolotl Maze Rescue</h1>
+        <div id="instructions">Use Arrow Keys. Rescue 3 blue axolotls (friends).</div>
+        <div id="status">Rescued: 0 / 3</div>
+        <div id="game-board">
+             <div id="game-over-message">
+                <span>You Win!</span>
+                <button id="play-again">Play Again?</button>
+            </div>
+            <!-- Maze tiles will be generated here -->
+        </div>
+    </div>
+
+    <script>
+        const gameBoard = document.getElementById('game-board');
+        const statusDisplay = document.getElementById('status');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const playAgainButton = document.getElementById('play-again');
+
+        // --- Config ---
+        const MAZE_WIDTH = 15;
+        const MAZE_HEIGHT = 11;
+        const NUM_FRIENDS_TO_RESCUE = 3;
+        const TILE_FLOOR = 0;
+        const TILE_WALL = 1;
+        const TILE_SIZE = 30; // CSS tile size
+
+        // --- State ---
+        let mazeLayout = [];
+        let playerPos = { x: 1, y: 1 };
+        let friends = []; // { x, y, rescued: false, element: null }
+        let exitPos = { x: MAZE_WIDTH - 2, y: MAZE_HEIGHT - 2 };
+        let rescuedCount = 0;
+        let exitOpen = false;
+        let gameOver = false;
+        let playerElement = null; // Reference to the player's axolotl div
+
+
+        // --- Helper Functions (getRandomInt, shuffleArray - unchanged) ---
+        function getRandomInt(max) { return Math.floor(Math.random() * max); }
+        function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
+
+        // --- Maze Generation (generateMaze - unchanged) ---
+        function generateMaze(width, height) { /* ... unchanged ... */
+             if (width % 2 === 0) width++; if (height % 2 === 0) height++;
+             let maze = Array(height).fill(null).map(() => Array(width).fill(TILE_WALL));
+             let stack = []; let startX = 1; let startY = 1;
+             maze[startY][startX] = TILE_FLOOR; stack.push({ x: startX, y: startY });
+             while (stack.length > 0) {
+                 let current = stack[stack.length - 1]; let neighbors = [];
+                 const directions = [{ x: 0, y: -2 }, { x: 0, y: 2 }, { x: -2, y: 0 }, { x: 2, y: 0 }];
+                 for (let dir of directions) {
+                     let nx = current.x + dir.x; let ny = current.y + dir.y;
+                     if (nx > 0 && nx < width - 1 && ny > 0 && ny < height - 1 && maze[ny][nx] === TILE_WALL) {
+                         neighbors.push({ x: nx, y: ny, wallX: current.x + dir.x / 2, wallY: current.y + dir.y / 2 });
+                     }
+                 }
+                 if (neighbors.length > 0) {
+                     let chosen = neighbors[getRandomInt(neighbors.length)];
+                     maze[chosen.wallY][chosen.wallX] = TILE_FLOOR;
+                     maze[chosen.y][chosen.x] = TILE_FLOOR;
+                     stack.push({ x: chosen.x, y: chosen.y });
+                 } else { stack.pop(); }
+             }
+             if (maze[height - 2][width - 2] === TILE_WALL) { /* Safeguard exit */
+                 maze[height - 2][width - 2] = TILE_FLOOR;
+                 if(maze[height-3] && maze[height-3][width-2]===TILE_WALL && maze[height-2][width-3]===TILE_WALL){
+                     maze[height-2][width-3] = TILE_FLOOR; // Prefer carving horizontally
+                 }
+             }
+             return maze;
+        }
+
+        // --- Axolotl HTML Structure Generation ---
+        function createAxolotlElement(isPlayer) {
+            const axolotl = document.createElement('div');
+            axolotl.classList.add('axolotl', isPlayer ? 'player-axolotl' : 'friend-axolotl');
+
+            // NO LONGER NEEDED: const body = document.createElement('div');
+            // NO LONGER NEEDED: body.classList.add('body');
+
+            // Eyes
+            const eyeL = document.createElement('div');
+            eyeL.classList.add('eye', 'left');
+            const pupilL = document.createElement('div');
+            pupilL.classList.add('pupil');
+            eyeL.appendChild(pupilL);
+
+            const eyeR = document.createElement('div');
+            eyeR.classList.add('eye', 'right');
+            const pupilR = document.createElement('div');
+            pupilR.classList.add('pupil');
+            eyeR.appendChild(pupilR);
+
+            // Gills (L & R)
+            for (let i = 1; i <= 3; i++) {
+                const gillL = document.createElement('div');
+                gillL.classList.add('gill', 'left', `g${i}`);
+                const gillR = document.createElement('div');
+                gillR.classList.add('gill', 'right', `g${i}`);
+                gillL.style.animationName = 'gill-wiggle';
+                gillR.style.animationName = 'gill-wiggle';
+                 if (i % 2 === 0) {
+                     gillL.style.animationDirection = 'alternate-reverse';
+                     gillR.style.animationDirection = 'alternate-reverse';
+                 }
+                axolotl.appendChild(gillL); // Append directly to axolotl
+                axolotl.appendChild(gillR); // Append directly to axolotl
+            }
+
+            // Tail
+            const tail = document.createElement('div');
+            tail.classList.add('tail');
+
+            // Assemble by appending directly to axolotl
+            axolotl.appendChild(eyeL);
+            axolotl.appendChild(eyeR);
+            axolotl.appendChild(tail);
+            // NO LONGER NEEDED: axolotl.appendChild(body);
+
+            return axolotl;
+        }
+
+
+        // --- Game Logic ---
+
+        function placeFriends() {
+            friends.forEach(f => f.element?.remove());
+            friends = [];
+            const possibleLocations = [];
+            const actualHeight = mazeLayout.length;
+            const actualWidth = mazeLayout[0].length;
+            for (let y = 0; y < actualHeight; y++) {
+                for (let x = 0; x < actualWidth; x++) {
+                    if (mazeLayout[y][x] === TILE_FLOOR &&
+                        !(x === playerPos.x && y === playerPos.y) &&
+                        !(x === exitPos.x && y === exitPos.y)) {
+                        possibleLocations.push({ x, y });
+                    }
+                }
+            }
+            shuffleArray(possibleLocations);
+            for (let i = 0; i < NUM_FRIENDS_TO_RESCUE && i < possibleLocations.length; i++) {
+                friends.push({ ...possibleLocations[i], rescued: false, element: null });
+            }
+             if (friends.length < NUM_FRIENDS_TO_RESCUE) { console.warn("Could not place all friends."); }
+        }
+
+        function drawMaze() {
+            const actualHeight = mazeLayout.length;
+            const actualWidth = mazeLayout[0].length;
+
+            gameBoard.style.gridTemplateColumns = `repeat(${actualWidth}, ${TILE_SIZE}px)`;
+            gameBoard.style.width = `${actualWidth * TILE_SIZE}px`;
+            gameBoard.style.height = `${actualHeight * TILE_SIZE}px`;
+
+            while(gameBoard.firstChild && gameBoard.firstChild !== gameOverMessage){
+                 gameBoard.removeChild(gameBoard.firstChild);
+            }
+
+            playerElement = null; // Clear player reference
+            friends.forEach(f => f.element = null); // Clear friend element references
+
+            for (let y = 0; y < actualHeight; y++) {
+                for (let x = 0; x < actualWidth; x++) {
+                    const tile = document.createElement('div');
+                    tile.classList.add('tile');
+
+                    if (mazeLayout[y][x] === TILE_WALL) {
+                        tile.classList.add('wall');
+                    } else {
+                        tile.classList.add('floor');
+
+                        // Add Player Axolotl
+                        if (x === playerPos.x && y === playerPos.y) {
+                            playerElement = createAxolotlElement(true); // Create player axolotl
+                            tile.appendChild(playerElement);
+                        }
+
+                        // Add Friend Axolotls
+                        const friendAtPos = friends.find(f => f.x === x && f.y === y && !f.rescued);
+                        if (friendAtPos) {
+                             friendAtPos.element = createAxolotlElement(false); // Create friend axolotl
+                             tile.appendChild(friendAtPos.element);
+                        }
+
+                        // Add Exit Icon Div
+                        if (x === exitPos.x && y === exitPos.y) {
+                             const exitContainer = document.createElement('div');
+                             exitContainer.classList.add('exit-container', exitOpen ? 'exit-open' : 'exit-closed');
+                             const exitIcon = document.createElement('div');
+                             exitIcon.classList.add('exit-icon');
+                             exitContainer.appendChild(exitIcon);
+                             tile.appendChild(exitContainer);
+                        }
+                    }
+                    gameBoard.insertBefore(tile, gameOverMessage);
+                }
+            }
+            updateStatus();
+            gameOverMessage.style.visibility = gameOver ? 'visible' : 'hidden';
+        }
+
+
+        function updateStatus() {
+            statusDisplay.textContent = `Rescued: ${rescuedCount} / ${NUM_FRIENDS_TO_RESCUE}`;
+             if (exitOpen && !gameOver) { statusDisplay.textContent += " - Exit is Open!"; }
+        }
+
+
+        function movePlayer(dx, dy) {
+            if (gameOver) return;
+
+            const nextX = playerPos.x + dx;
+            const nextY = playerPos.y + dy;
+
+            // Collision Checks (Boundary, Wall, Closed Exit) - unchanged
+            if (nextY < 0 || nextY >= mazeLayout.length || nextX < 0 || nextX >= mazeLayout[0].length ||
+                mazeLayout[nextY][nextX] === TILE_WALL ||
+                (nextX === exitPos.x && nextY === exitPos.y && !exitOpen)) {
+                // Optional: Add a little "bump" animation/feedback here if desired
+                if (playerElement) {
+                    playerElement.animate([
+                        { transform: 'translateX(0)' },
+                        { transform: `translateX(${dx * -2}px) translateY(${dy * -2}px)` }, // Tiny bump back
+                        { transform: 'translateX(0)' }
+                    ], { duration: 150, easing: 'ease-out' });
+                }
+                 return;
+            }
+
+            // --- Valid Move ---
+            playerPos.x = nextX;
+            playerPos.y = nextY;
+
+            // --- Interactions ---
+            // Friend Rescue
+            const friendIndex = friends.findIndex(f => f.x === playerPos.x && f.y === playerPos.y && !f.rescued);
+            if (friendIndex !== -1) {
+                const rescuedFriend = friends[friendIndex];
+                rescuedFriend.rescued = true;
+                 // Optional: Add a little "poof" animation before removing
+                 if(rescuedFriend.element) {
+                     rescuedFriend.element.animate([
+                         { opacity: 1, transform: 'scale(1)' },
+                         { opacity: 0, transform: 'scale(0.5)' }
+                     ], { duration: 200, easing: 'ease-in' }).onfinish = () => {
+                          rescuedFriend.element?.remove(); // Remove after animation
+                     };
+                 } else {
+                     rescuedFriend.element?.remove(); // Remove immediately if no element ref
+                 }
+                rescuedFriend.element = null;
+                rescuedCount++;
+                updateStatus();
+                if (rescuedCount === NUM_FRIENDS_TO_RESCUE) {
+                    exitOpen = true;
+                    console.log("Exit open!");
+                }
+            }
+
+            // Win Condition
+            if (playerPos.x === exitPos.x && playerPos.y === exitPos.y && exitOpen) {
+                gameOver = true;
+                console.log("You Win!");
+            }
+
+            // --- Redraw ---
+            // We redraw the whole board which is simpler than trying to move the complex axolotl DOM element
+            drawMaze();
+        }
+
+
+        function handleKeyPress(event) {
+             if (gameOver) {
+                 event.preventDefault();
+                 return;
+             };
+
+            let dx = 0, dy = 0;
+            switch (event.key) {
+                case 'ArrowUp': dy = -1; break;
+                case 'ArrowDown': dy = 1; break;
+                case 'ArrowLeft': dx = -1; break;
+                case 'ArrowRight': dx = 1; break;
+                default: return;
+            }
+             event.preventDefault();
+             movePlayer(dx, dy);
+        }
+
+        // --- Initialization ---
+        function initializeGame() {
+            console.log("Initializing new game...");
+            mazeLayout = generateMaze(MAZE_WIDTH, MAZE_HEIGHT);
+            const actualHeight = mazeLayout.length;
+            const actualWidth = mazeLayout[0].length;
+
+            playerPos = { x: 1, y: 1 };
+             if (mazeLayout[playerPos.y]?.[playerPos.x] === TILE_WALL) playerPos = { x:1, y:1}; // Basic fallback
+
+            exitPos = { x: actualWidth - 2, y: actualHeight - 2 };
+            if (mazeLayout[exitPos.y]?.[exitPos.x] === TILE_WALL) {
+                mazeLayout[exitPos.y][exitPos.x] = TILE_FLOOR;
+            }
+
+            rescuedCount = 0;
+            exitOpen = false;
+            gameOver = false;
+
+            placeFriends();
+            drawMaze();
+            gameOverMessage.style.visibility = 'hidden';
+        }
+
+        // --- Event Listeners ---
+        window.addEventListener('keydown', handleKeyPress);
+        playAgainButton.addEventListener('click', initializeGame);
+
+        // --- Start ---
+        initializeGame();
+
+    </script>
+
+</body>
+</html>
