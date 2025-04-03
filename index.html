@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Updated Title -->
+    <title>Cute Axolotl Math Adventure!</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column; /* Arrange elements vertically */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Use min-height */
+            margin: 0;
+            background-color: #f0f8ff; /* Alice blue background */
+            font-family: 'Comic Sans MS', cursive, sans-serif; /* Cuter font */
+        }
+        h1 {
+            color: #FF69B4; /* Hot Pink */
+            text-shadow: 1px 1px 2px white;
+        }
+        #game-container {
+            position: relative; /* Needed to position the math UI over the canvas */
+            width: 800px; /* Match canvas width */
+            height: 400px; /* Match canvas height */
+            margin-bottom: 10px; /* Space below game */
+        }
+        canvas {
+            border: 2px solid #FFB6C1; /* Pink border */
+            background-color: #87CEEB; /* Sky blue */
+            display: block; /* Prevent extra space below canvas */
+            border-radius: 5px; /* Slightly rounded corners */
+        }
+        #math-ui {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95); /* More opaque */
+            border: 3px solid #FF69B4; /* Hot Pink border */
+            border-radius: 15px;
+            padding: 30px; /* More padding */
+            text-align: center;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            display: none; /* Hidden by default */
+            z-index: 10;
+            width: 350px; /* Give UI fixed width */
+        }
+        #math-ui label {
+            font-size: 2em; /* Larger question */
+            margin-bottom: 20px;
+            display: block;
+            color: #444;
+        }
+        #math-ui input {
+            font-size: 1.8em;
+            padding: 10px;
+            width: 100px; /* Wider input */
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin-right: 10px;
+            box-sizing: border-box; /* Include padding in width */
+        }
+        #math-ui button {
+            font-size: 1.8em;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #4CAF50; /* Nicer Green */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+         #math-ui button:hover {
+            background-color: #45a049;
+         }
+         #feedback {
+            margin-top: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            min-height: 1.5em;
+            transition: color 0.3s; /* Smooth color change */
+         }
+        .feedback-correct {
+             color: #3c763d; /* Dark Green */
+        }
+        .feedback-incorrect {
+            color: #a94442; /* Dark Red */
+        }
+
+        /* Simple animation for incorrect answer */
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+          0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+          25% { transform: translate(-50%, -50%) translateX(-10px); } /* More shake */
+          75% { transform: translate(-50%, -50%) translateX(10px); }
+        }
+         /* Added for Win Screen Text */
+        #win-text-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 20; /* Above everything else */
+        }
+    </style>
+</head>
+<body>
+    <h1>Cute Axolotl Math Adventure!</h1>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        <!-- Math Problem UI (No changes needed here) -->
+        <div id="math-ui">
+            <label id="question-label">Question?</label>
+            <input type="number" id="answer-input" autocomplete="off">
+            <button id="submit-button">Solve!</button>
+            <div id="feedback"></div>
+        </div>
+         <!-- Win Screen Text Layer -->
+        <div id="win-text-container" style="display: none;">
+            <!-- Content filled by JS -->
+        </div>
+    </div>
+    <p id="instruction-text">Solve 10 math problems to help the Axolotl grow big and rest!</p>
+
+<!-- === AUDIO ELEMENTS === -->
+<!-- Replace 'YOUR_MUSIC.mp3' with your actual background music file -->
+<audio id="bgm" src="AxolotlParty.mp3" loop preload="auto"></audio>
+<!-- Replace 'CORRECT_SOUND.mp3' with your actual sound effect file -->
+<audio id="correctSound" src="Recording.m4a" preload="auto"></audio>
+<!-- ==================== -->
+
+
+
+    <script src="game.js">
+    // Select the audio elements
+    let bgm = document.getElementById("bgm");
+    let correctSound = document.getElementById("correctSound");
+    
+    // Set default volumes
+    bgm.volume = 0.2; // 50% volume
+    correctSound.volume = 1.2; // 80% volume
+
+</script>
+</body>
+</html>
